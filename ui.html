@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Secret Santa UI</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      max-width: 1100px;
+    }
+    h2 {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 6px;
+    }
+    input, button {
+      padding: 6px;
+      margin: 4px 0;
+    }
+    button {
+      cursor: pointer;
+    }
+    .row {
+      display: flex;
+      gap: 30px;
+    }
+    .box {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 15px;
+    }
+    .user-entry {
+      padding: 4px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Secret Santa Control Panel</h1>
+
+  <!-- SIDE-BY-SIDE -->
+  <div class="row">
+
+    <!-- Register form -->
+    <div class="box">
+      <h2>Register User</h2>
+
+      <label>Name:</label><br>
+      <input id="regName" style="width:100%;"><br>
+
+      <label>Password:</label><br>
+      <input id="regPassword" type="password" style="width:100%;"><br>
+
+      <button onclick="registerUser()">Register</button>
+
+      <pre id="regOutput"></pre>
+    </div>
+
+    <!-- Registered list -->
+    <div class="box">
+      <h2>Registered Users</h2>
+      <div id="registryList"></div>
+    </div>
+
+  </div>
+
+  <!-- Generate Assignments -->
+  <div class="box" style="margin-top:30px;">
+    <h2>Assignments</h2>
+    <button onclick="generateAssignments()">Generate Assignments</button>
+
+    <div id="assignmentsList" style="margin-top:20px;"></div>
+  </div>
+
+
+<script>
+const API = "";  // same origin
+
+// ------------------ Register User ------------------
+async function registerUser() {
+  const name = document.getElementById("regName").value;
+  const password = document.getElementById("regPassword").value;
+
+  const resp = await fetch(API + "/register", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ name, password })
+  });
+
+  const data = await resp.json();
+  document.getElementById("regOutput").textContent = JSON.stringify(data, null, 2);
+
+  loadRegistry();
+}
+
+// ------------------ Load Registry ------------------
+async function loadRegistry() {
+  const resp = await fetch(API + "/registry");
+  const list = await resp.json();
+
+  const container = document.getElementById("registryList");
+  container.innerHTML = "";
+
+  list.forEach(user => {
+    const div = document.createElement("div");
+    div.className = "user-entry";
+    div.textContent = user.name;
+    container.appendChild(div);
+  });
+}
+
+// ------------------ Generate Assignments ------------------
+async function generateAssignments() {
+  await fetch(API + "/assign", { method: "POST" });
+  loadAssignments();
+}
+
+// ------------------ Load Assignments ------------------
+async function loadAssignments() {
+  const resp = await fetch(API + "/assignments");
+  const list = await resp.json();
+
+  const container = document.getElementById("assignmentsList");
+  container.innerHTML = "";
+
+  list.forEach(entry => {
+    const row = document.createElement("div");
+    row.className = "user-entry";
+
+    const label = document.createElement("span");
+    label.textContent = entry.santa;
+
+    const btn = document.createElement("button");
+    btn.textContent = "Reveal";
+    btn.onclick = () => revealRecipient(entry);
+
+    row.appendChild(label);
+    row.appendChild(btn);
+
+    container.appendChild(row);
+  });
+}
+
+// ------------------ Reveal Recipient ------------------
+async function revealRecipient(entry) {
+  const password = prompt("Enter password for " + entry.santa + ":");
+  if (!password) return;
+
+  const resp = await fetch(API + "/decrypt", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      password,
+      ciphertext_b64: entry.encrypted_receiver_b64
+    })
+  });
+
+  const data = await resp.json();
+
+  if (data.receiver) {
+    alert(entry.santa + " → " + data.receiver);
+  } else {
+    alert("Error: " + JSON.stringify(data));
+  }
+}
+
+// Initial load
+loadRegistry();
+loadAssignments();
+</script>
+
+</body>
+</html>
