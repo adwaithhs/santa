@@ -61,12 +61,7 @@ async def get_registry():
 @app.get("/assignments")
 async def get_assignments():
   try:
-    # fallback if santa.py does not have load_assignments()
-    import json, os
-    if os.path.exists("assignments.json"):
-      with open("assignments.json", "r", encoding="utf-8") as f:
-        return json.load(f)
-    return []
+    return santa.load_assignments()
   except Exception as e:
     raise HTTPException(status_code=500, detail=str(e))
 

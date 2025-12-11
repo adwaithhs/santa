@@ -23,13 +23,14 @@ import os
 import base64
 import random
 from typing import List, Dict, Tuple, Any
+from pathlib import Path
 
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from nacl import signing, public, bindings, encoding as nacl_encoding
 from nacl.public import SealedBox
 
-REGISTRY_FILE = "registry.json"
-ASSIGNMENTS_FILE = "assignments.json"
+REGISTRY_FILE = Path("registry.json")
+ASSIGNMENTS_FILE = Path("assignments.json")
 
 
 # ---------------------------
@@ -90,15 +91,27 @@ def ed25519_seed_to_curve25519_keypair(seed32: bytes) -> Tuple[bytes, bytes]:
 # ---------------------------
 
 def load_registry() -> List[Dict[str, str]]:
-    if not os.path.exists(REGISTRY_FILE):
+    if not REGISTRY_FILE.exists():
         return []
-    with open(REGISTRY_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+    return json.loads(REGISTRY_FILE.read_text())
 
 
 def save_registry(registry: List[Dict[str, str]]) -> None:
-    with open(REGISTRY_FILE, "w", encoding="utf-8") as f:
-        json.dump(registry, f, indent=2, ensure_ascii=False)
+    REGISTRY_FILE.write_text(
+        json.dumps(registry, indent=2, ensure_ascii=False)
+    )
+
+
+def load_assignments() -> List[Dict[str, str]]:
+    if not ASSIGNMENTS_FILE.exists():
+        return []
+    return json.loads(ASSIGNMENTS_FILE.read_text())
+
+
+def save_assignments(assignments: List[Dict[str, str]]) -> None:
+    ASSIGNMENTS_FILE.write_text(
+        json.dumps(assignments, indent=2, ensure_ascii=False)
+    )
 
 
 def register(name: str, password: str) -> None:
@@ -161,8 +174,7 @@ def generate_assignments() -> None:
         enc = encrypt_for_santa(entry["public_key_b64"], receiver)
         output.append({"santa": santa, "encrypted_receiver_b64": enc})
 
-    with open(ASSIGNMENTS_FILE, "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2, ensure_ascii=False)
+    save_assignments(output)
 
 
 # ---------------------------
@@ -212,8 +224,7 @@ def test_end_to_end() -> None:
     generate_assignments()
 
     # Load assignments and demonstrate decryption
-    with open(ASSIGNMENTS_FILE, "r", encoding="utf-8") as f:
-        assignments = json.load(f)
+    assignments = load_assignments()
 
     print("=== Assignments (encrypted) ===")
     for entry in assignments:
