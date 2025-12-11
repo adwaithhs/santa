@@ -66,7 +66,7 @@ async def get_assignments():
     raise HTTPException(status_code=500, detail=str(e))
 
 
-html = Path('ui.html').read_text()
+html = Path('ui3.html').read_text()
 
 @app.get('/')
 async def root():
