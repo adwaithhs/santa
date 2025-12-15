@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Santa Manager - Christmas Edition</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+
+<style>
+    :root {
+        --primary: #c41e3a;
+        --secondary: #0a7e07;
+        --accent: #daa520;
+        --dark-bg: #0b1a0f;
+        --light-bg: #f8f9fa;
+        --card-bg: #ffffff;
+        --text: #333333;
+        --text-light: #666666;
+        --border: #e0e0e0;
+    }
+    
+    body {
+        background-color: #fff;
+        background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50,5 L60,40 L95,40 L65,60 L75,95 L50,75 L25,95 L35,60 L5,40 L40,40 Z" fill="rgba(256, 240, 240)"/></svg>');
+        background-size: 200px;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        color: var(--text);
+        line-height: 1.6;
+    }
+    
+    /* Cards */
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        background: var(--card-bg);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+    
+    .card-header {
+        background: linear-gradient(to right, rgba(196, 30, 58, 0.9), rgba(196, 30, 58, 0.7));
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        padding: 1.25rem 1.5rem;
+        border-radius: 12px 12px 0 0;
+        border: none;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        background: linear-gradient(to right, var(--primary), #d33f5c);
+        border: none;
+        border-radius: 8px;
+        padding: 0.625rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(to right, #a81b33, #c41e3a);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+        color: white;
+    }
+    
+    .btn-success {
+        background: linear-gradient(to right, var(--secondary), #2a9a27);
+        border: none;
+        border-radius: 8px;
+        padding: 0.625rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: linear-gradient(to right, #086c06, #0a7e07);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(10, 126, 7, 0.3);
+        color: white;
+    }
+    
+    .btn-warning {
+        background: linear-gradient(to right, var(--accent), #e6b450);
+        border: none;
+        border-radius: 8px;
+        color: #333;
+        padding: 0.625rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-warning:hover {
+        background: linear-gradient(to right, #c1911c, #daa520);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+    }
+
+    .bg-christmas-green, .bg-christmas-red {
+        background: #d3586d;
+    }
+    
+    /* Header */
+    .header {
+        background: linear-gradient(to right, rgba(29, 119, 53, 0.95), rgba(11, 90, 27, 0.9));
+        color: white;
+        padding: 2.5rem 0;
+        border-radius: 0 0 20px 20px;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header h1 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: white;
+    }
+    
+    .header p {
+        opacity: 0.9;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+    }
+    
+    /* Assignment Rows */
+    .assignment-row {
+        background: var(--card-bg);
+        border-left: 4px solid var(--primary);
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .assignment-row:hover {
+        border-left-width: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .assignment-row.revealed {
+        border-left-color: var(--secondary);
+        background: linear-gradient(to right, rgba(10, 126, 7, 0.03), rgba(10, 126, 7, 0.01));
+    }
+    
+    .santa-name {
+        font-weight: 600;
+        color: var(--primary);
+    }
+    
+    .recipient-name {
+        font-weight: 600;
+        color: var(--secondary);
+    }
+    
+    /* Stats Cards */
+    .stats-card {
+        background: linear-gradient(135deg, rgba(196, 30, 58, 0.1), rgba(11, 26, 15, 0.05));
+        border: 1px solid rgba(196, 30, 58, 0.1);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+    
+    .stats-card:hover {
+        background: linear-gradient(135deg, rgba(196, 30, 58, 0.15), rgba(11, 26, 15, 0.08));
+        border-color: rgba(196, 30, 58, 0.2);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+    
+    /* Form Controls */
+    .form-control {
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+    }
+    
+    /* Badges */
+    .participant-badge {
+        background: linear-gradient(to right, rgba(196, 30, 58, 0.1), rgba(10, 126, 7, 0.1));
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.9rem;
+        color: var(--text);
+        transition: all 0.2s ease;
+        border: 1px solid rgba(196, 30, 58, 0.1);
+    }
+    
+    .participant-badge:hover {
+        background: linear-gradient(to right, rgba(196, 30, 58, 0.15), rgba(10, 126, 7, 0.15));
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .participant-badge i {
+        margin-right: 0.5rem;
+        color: var(--primary);
+    }
+    
+    /* Status Badge */
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge.active {
+        background: linear-gradient(to right, rgba(10, 126, 7, 0.15), rgba(10, 126, 7, 0.1));
+        color: var(--secondary);
+    }
+    
+    .status-badge.pending {
+        background: linear-gradient(to right, rgba(218, 165, 32, 0.15), rgba(218, 165, 32, 0.1));
+        color: #b8860b;
+    }
+    
+    /* Action Buttons Container */
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-light);
+        border-radius: 10px;
+        background: linear-gradient(to right, rgba(196, 30, 58, 0.03), rgba(10, 126, 7, 0.03));
+        border: 2px dashed rgba(196, 30, 58, 0.2);
+    }
+    
+    .empty-state i {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--primary);
+        opacity: 0.5;
+    }
+    
+    /* Modal Styling */
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+    
+    .modal-header {
+        background: linear-gradient(to right, rgba(196, 30, 58, 0.95), rgba(196, 30, 58, 0.85));
+        color: white;
+        border: none;
+        padding: 1.5rem;
+    }
+    
+    .modal-title {
+        font-weight: 600;
+        color: white;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+        background: white;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .header {
+            padding: 1.75rem 0;
+            text-align: center;
+            border-radius: 0 0 15px 15px;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .action-buttons .btn {
+            width: 100%;
+        }
+        
+        .assignment-row {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        
+        .card-body {
+            padding: 1.25rem;
+        }
+        
+        .stats-card {
+            margin-bottom: 1rem;
+        }
+    }
+    
+    /* Festive Elements */
+    .festive-border {
+        position: relative;
+    }
+    
+    .festive-border::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(to right, var(--primary), var(--accent), var(--secondary));
+        border-radius: 3px 3px 0 0;
+    }
+</style>
+    
+</head>
+<body>
+    
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1><i class="bi bi-tree-fill me-2"></i>Secret Santa Manager - Christmas Edition</h1>
+                    <p class="mb-0">Organize your festive gift exchange with holiday cheer! 🎄</p>
+                </div>
+                <div class="d-none d-md-block">
+                    <span class="badge bg-light text-danger fs-6 p-2" id="eventYear"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="row g-4">
+            <!-- Left Column - Registration -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center">
+                        <i class="bi bi-person-plus-fill me-2"></i>
+                        <span>Register Participants</span>
+                    </div>
+                    <div class="card-body">
+                        <form id="registrationForm">
+                            <div class="mb-3">
+                                <label for="regName" class="form-label">Participant Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-christmas-red text-white"><i class="bi bi-person-fill"></i></span>
+                                    <input type="text" class="form-control" id="regName" placeholder="Enter full name" required>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="regPassword" class="form-label">Secret Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-christmas-green text-white"><i class="bi bi-key-fill"></i></span>
+                                    <input type="password" class="form-control" id="regPassword" placeholder="Create a secure password" required>
+                                </div>
+                                <div class="form-text">This password will be needed to reveal assignments</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2">
+                                <i class="bi bi-person-check me-2"></i>Register Participant
+                            </button>
+                        </form>
+                        
+                        <div id="regOutput" class="mt-3"></div>
+                    </div>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="stats-card mt-4">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="stat-number" id="participantCount">0</div>
+                            <div class="stat-label"><i class="bi bi-people-fill me-1"></i>Participants</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-number" id="assignmentCount">0</div>
+                            <div class="stat-label"><i class="bi bi-gift-fill me-1"></i>Assignments</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instructions -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <span>How It Works</span>
+                    </div>
+                    <div class="card-body">
+                        <ol class="list-group list-group-flush list-group-numbered">
+                            <li class="list-group-item px-0 border-0">Register all participants with a secret password</li>
+                            <li class="list-group-item px-0 border-0">Generate random Secret Santa assignments</li>
+                            <li class="list-group-item px-0 border-0">Participants reveal who they're gifting to using their password</li>
+                            <li class="list-group-item px-0 border-0">Download the complete event data for your records</li>
+                        </ol>
+                        <div class="mt-3 text-center">
+                            <small class="text-muted"><i class="bi bi-tree-fill me-1"></i>Have a merry Christmas!</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column - Unified Dashboard -->
+            <div class="col-lg-8">
+                <div class="dashboard-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="section-title mb-0">Festive Dashboard</h3>
+                        <div class="action-buttons">
+                            <button type="button" class="btn btn-warning" id="downloadDataBtn">
+                                <i class="bi bi-download me-2"></i>Export Data
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Participants Section -->
+                    <div class="mb-5">
+                        <h5 class="d-flex align-items-center mb-3">
+                            <i class="bi bi-people-fill me-2 festive-icon"></i>
+                            <span>Registered Participants</span>
+                            <span class="badge bg-danger ms-2" id="participantBadge">0</span>
+                        </h5>
+                        
+                        <div id="registryContainer" class="d-flex flex-wrap mb-3">
+                            <!-- Participants will be loaded here -->
+                        </div>
+                        
+                        <div id="emptyRegistry" class="empty-state">
+                            <i class="bi bi-people"></i>
+                            <h5>No participants yet</h5>
+                            <p class="text-muted">Register participants to get started</p>
+                            <div class="mt-2">
+                                <i class="bi bi-tree me-1"></i>
+                                <i class="bi bi-snow me-1"></i>
+                                <i class="bi bi-star me-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Assignments Section -->
+                    <div>
+                        <h5 class="d-flex align-items-center mb-3">
+                            <i class="bi bi-gift-fill me-2 festive-icon"></i>
+                            <span>Secret Santa Assignments</span>
+                            <span class="badge bg-danger ms-2" id="assignmentBadge">0</span>
+                        </h5>
+                        
+                        <p class="text-muted mb-4">Assignments are encrypted and can only be revealed by the Secret Santa using their password. <i class="bi bi-tree-fill ms-1"></i></p>
+                        
+                        <div id="assignmentsContainer">
+                            <!-- Assignments will be loaded here -->
+                        </div>
+                        
+                        <div id="emptyAssignments" class="empty-state">
+                            <i class="bi bi-gift"></i>
+                            <h5>No assignments generated yet</h5>
+                            <p class="text-muted">Generate assignments to start the Secret Santa event</p>
+                            <div class="mt-3">
+                                <small class="text-muted"><i class="bi bi-info-circle me-1"></i>At least 3 participants are required</small>
+                            </div>
+                            <div class="mt-2">
+                                <i class="bi bi-tree me-1"></i>
+                                <i class="bi bi-snow2 me-1"></i>
+                                <i class="bi bi-gem me-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Revealing Recipient -->
+    <div class="modal fade" id="revealModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-gift-fill me-2"></i>Reveal Your Recipient</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter your password to reveal who you're gifting to.</p>
+                    <div class="mb-3">
+                        <label for="modalPassword" class="form-label">Password for <span id="modalSantaName" class="fw-bold text-danger"></span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-christmas-green text-white"><i class="bi bi-key-fill"></i></span>
+                            <input type="password" class="form-control" id="modalPassword" placeholder="Enter your secret password">
+                        </div>
+                    </div>
+                    <div class="alert alert-info d-none" id="revealResult">
+                        <!-- Result will be shown here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmRevealBtn">Reveal Recipient</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <script>
+        // Configuration
+        const API_BASE_URL = "/cgi-bin/api.py";        
+        // DOM Ready
+        $(document).ready(function() {
+            // Set current year in header
+            $('#eventYear').text('🎄 ' + new Date().getFullYear() + ' 🎄');
+            
+
+            // Initial load
+            loadDashboardData();
+            
+            // Registration form submission
+            $('#registrationForm').on('submit', function(e) {
+                e.preventDefault();
+                registerUser();
+            });
+            
+            // Download data button
+            $('#downloadDataBtn').on('click', function() {
+                downloadEventData();
+            });
+            
+            // Confirm reveal button in modal
+            $('#confirmRevealBtn').on('click', function() {
+                const password = $('#modalPassword').val();
+                const santa = $(this).data('santa');
+                const ciphertext = $(this).data('ciphertext');
+                
+                if (password) {
+                    revealRecipient(santa, ciphertext, password);
+                } else {
+                    showAlert('Please enter your password.', 'danger', '#revealResult');
+                }
+            });
+            
+            // Modal hidden event
+            $('#revealModal').on('hidden.bs.modal', function() {
+                $('#modalPassword').val('');
+                $('#revealResult').addClass('d-none').removeClass('alert-success alert-danger');
+            });
+        });
+        
+        
+        // Register User
+        async function registerUser() {
+            const name = $('#regName').val();
+            const password = $('#regPassword').val();
+            
+            if (!name || !password) {
+                showAlert('Please enter both name and password.', 'danger', '#regOutput');
+                return;
+            }
+            
+            try {
+                const response = await axios.post(`${API_BASE_URL}/register`, {
+                    name: name,
+                    password: password
+                });
+                
+                showAlert(`🎅 Successfully registered ${name}!`, 'success', '#regOutput');
+                
+                // Clear form
+                $('#regName').val('');
+                $('#regPassword').val('');
+                $('#regName').focus();
+                
+                // Refresh dashboard
+                loadDashboardData();
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert('Registration failed. Please try again.', 'danger', '#regOutput');
+            }
+        }
+        
+        // Load Dashboard Data
+        async function loadDashboardData() {
+            try {
+                // Load registry
+                const registryResponse = await axios.get(`${API_BASE_URL}/registry`);
+                const registryList = registryResponse.data;
+                
+                // Load assignments
+                const assignmentsResponse = await axios.get(`${API_BASE_URL}/assignments`);
+                const assignmentsList = assignmentsResponse.data;
+                
+                // Update UI
+                updateRegistryDisplay(registryList);
+                updateAssignmentsDisplay(assignmentsList);
+                
+                // Update stats
+                $('#participantCount').text(registryList.length);
+                $('#assignmentCount').text(assignmentsList.length);
+                $('#participantBadge').text(registryList.length);
+                $('#assignmentBadge').text(assignmentsList.length);
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showAlert('Could not load dashboard data.', 'danger', '#assignmentsContainer');
+            }
+        }
+        
+        // Update Registry Display
+        function updateRegistryDisplay(registryList) {
+            const container = $('#registryContainer');
+            const emptyState = $('#emptyRegistry');
+            
+            if (registryList.length === 0) {
+                container.html('');
+                emptyState.removeClass('d-none');
+                return;
+            }
+            
+            emptyState.addClass('d-none');
+            container.html('');
+            
+            registryList.forEach(user => {
+                const badge = $(`
+                    <div class="participant-badge">
+                        <i class="bi bi-person-circle"></i>
+                        <span>${user.name}</span>
+                    </div>
+                `);
+                container.append(badge);
+            });
+        }
+        
+        // Update Assignments Display
+        function updateAssignmentsDisplay(assignmentsList) {
+            const container = $('#assignmentsContainer');
+            const emptyState = $('#emptyAssignments');
+            
+            if (assignmentsList.length === 0) {
+                container.html('');
+                emptyState.removeClass('d-none');
+                return;
+            }
+            
+            emptyState.addClass('d-none');
+            container.html('');
+            
+            assignmentsList.forEach(entry => {
+                // Check if this assignment has been revealed
+                const isRevealed = false
+                const recipient = null;
+                
+                const assignmentRow = $(`
+                    <div class="assignment-row">
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <span class="santa-name">${entry.santa}</span>
+                                <span class="text-muted mx-2">→</span>
+                                <span class="badge bg-light text-dark">???</span>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm reveal-btn" data-santa="${entry.santa}" data-ciphertext="${entry.encrypted_receiver_b64}">
+                                <i class="bi bi-eye me-1"></i>Reveal
+                            </button>
+                        </div>
+                    </div>
+                `);
+                
+                if (!isRevealed) {
+                    assignmentRow.find('.reveal-btn').on('click', function() {
+                        const santa = $(this).data('santa');
+                        const ciphertext = $(this).data('ciphertext');
+                        openRevealModal(santa, ciphertext);
+                    });
+                }
+                
+                container.append(assignmentRow);
+            });
+        }
+
+        
+        // Open Reveal Modal
+        function openRevealModal(santa, ciphertext) {
+            $('#modalSantaName').text(santa);
+            $('#confirmRevealBtn')
+                .data('santa', santa)
+                .data('ciphertext', ciphertext);
+            
+            $('#revealModal').modal('show');
+        }
+        
+        // Reveal Recipient
+        async function revealRecipient(santa, ciphertext, password) {
+            try {
+                const response = await axios.post(`${API_BASE_URL}/decrypt`, {
+                    password: password,
+                    ciphertext_b64: ciphertext
+                });
+                
+                const data = response.data;
+                
+                if (data.receiver) {
+                    
+                    $('#revealResult')
+                        .removeClass('d-none alert-danger')
+                        .addClass('alert-success')
+                        .html(`
+                            <h6><i class="bi bi-gift-fill me-2"></i>Secret Santa Assignment</h6>
+                            <p class="mb-2"><strong>${santa}</strong> is Secret Santa for</p>
+                            <h4 class="text-center text-success my-3">🎁 ${data.receiver} 🎁</h4>
+                            <small class="text-muted d-block">Keep this a secret until gift exchange!</small>
+                            <div class="text-center mt-2">
+                                <i class="bi bi-tree-fill me-1 text-success"></i>
+                                <i class="bi bi-star-fill me-1 text-warning"></i>
+                                <i class="bi bi-snow2 me-1 text-info"></i>
+                            </div>
+                        `);
+                    
+                    // Update dashboard after a delay
+                    setTimeout(() => {
+                        $('#revealModal').modal('hide');
+                        loadDashboardData();
+                    }, 3000);
+                    
+                } else {
+                    $('#revealResult')
+                        .removeClass('d-none alert-success')
+                        .addClass('alert-danger')
+                        .html(`<i class="bi bi-exclamation-triangle me-2"></i>Invalid password. Please try again.`);
+                }
+                
+            } catch (error) {
+                console.error('Error revealing recipient:', error);
+                $('#revealResult')
+                    .removeClass('d-none alert-success')
+                    .addClass('alert-danger')
+                    .html(`<i class="bi bi-exclamation-triangle me-2"></i>Error: ${error.response?.data?.error || 'Could not decrypt assignment'}`);
+            }
+        }
+        
+        // Download Event Data
+        async function downloadEventData() {
+            try {
+                // Fetch both datasets
+                const [registryResponse, assignmentsResponse] = await Promise.all([
+                    axios.get(`${API_BASE_URL}/registry`),
+                    axios.get(`${API_BASE_URL}/assignments`)
+                ]);
+                
+                const registry = registryResponse.data;
+                const assignments = assignmentsResponse.data;
+                
+                // Combine data into single object
+                const eventData = {
+                    event: "Secret Santa - Christmas Edition",
+                    year: new Date().getFullYear(),
+                    generated_at: new Date().toISOString(),
+                    participants: registry,
+                    assignments: assignments,
+                    stats: {
+                        total_participants: registry.length,
+                        total_assignments: assignments.length,
+                        revealed_count: 0
+                    }
+                };
+                
+                // Create and download JSON file
+                const dataStr = JSON.stringify(eventData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = `secret-santa-christmas-${new Date().getFullYear()}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
+                // Show success message
+                showAlert('🎄 Event data downloaded successfully!', 'success', '#assignmentsContainer');
+                
+            } catch (error) {
+                console.error('Error downloading event data:', error);
+                showAlert('Could not download event data. Please try again.', 'danger', '#assignmentsContainer');
+            }
+        }
+        
+        // Helper: Show alert message
+        function showAlert(message, type, container) {
+            const alert = $(`
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `);
+            
+            $(container).prepend(alert);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                alert.alert('close');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
