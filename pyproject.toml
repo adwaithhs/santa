@@ -1,0 +1,13 @@
+[project]
+name = "santa"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "cryptography>=46.0.3",
+    "fastapi>=0.124.4",
+    "pydantic>=2.12.5",
+    "pynacl>=1.6.1",
+    "uvicorn>=0.38.0",
+]
